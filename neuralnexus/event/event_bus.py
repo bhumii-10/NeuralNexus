@@ -1,4 +1,5 @@
 from datetime import datetime
+import pytz
 from typing import List, Dict
 from neuralnexus.utils.logger import setup_logger
 
@@ -7,11 +8,13 @@ logger = setup_logger(__name__)
 class EventBus:
     def __init__(self):
         self.events: List[Dict] = []
+        self.timezone = pytz.timezone("Asia/Kolkata")
     
     def publish_event(self, event_type: str, data: dict):
         """Publish an event to the event bus"""
+        timestamp = datetime.now(self.timezone)
         event = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": timestamp.isoformat(),
             "event_type": event_type,
             "data": data
         }

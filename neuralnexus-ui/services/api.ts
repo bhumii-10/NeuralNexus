@@ -79,3 +79,8 @@ export const checkHealth = async (): Promise<{ status: string }> => {
   const response = await api.get('/health');
   return response.data;
 };
+
+export const deleteHistory = async (queryId: number): Promise<{ success: boolean; message: string }> => {
+  const response = await api.delete(`/history/${queryId}`);
+  return response.data;
+};

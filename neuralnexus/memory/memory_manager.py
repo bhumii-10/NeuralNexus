@@ -62,6 +62,16 @@ class MemoryManager:
         """Get in-memory conversation history"""
         return self.conversation_history[-limit:]
     
+    def delete_query(self, query_id: int) -> bool:
+        """Delete query and related tasks/results from database"""
+        try:
+            database.delete_query(query_id)
+            logger.info(f"Query {query_id} and related data deleted from database")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to delete query {query_id}: {str(e)}")
+            raise
+    
     def clear(self):
         """Clear in-memory history"""
         self.conversation_history.clear()

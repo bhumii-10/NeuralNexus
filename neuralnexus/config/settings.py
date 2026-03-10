@@ -16,6 +16,9 @@ class Settings:
         "postgresql://postgres:bhumic10@localhost:5432/neuralnexus"
     )
     
+    # Quality Enhancement Configuration
+    ENABLE_REFINEMENT: bool = os.getenv("ENABLE_REFINEMENT", "false").lower() == "true"
+    
     @classmethod
     def validate(cls):
         if not cls.OPENAI_API_KEY:

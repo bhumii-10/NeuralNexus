@@ -5,8 +5,19 @@ from neuralnexus.config.settings import settings
 from neuralnexus.utils.logger import setup_logger
 from typing import List, Dict, Optional
 from datetime import datetime
+import pytz
 
 logger = setup_logger(__name__)
+
+# Asia/Kolkata timezone
+IST = pytz.timezone("Asia/Kolkata")
+
+def ensure_timezone_aware(dt: datetime) -> datetime:
+    """Ensure datetime is timezone-aware (IST)"""
+    if dt.tzinfo is None:
+        # Naive datetime - assume it's already in IST
+        return IST.localize(dt)
+    return dt
 
 class Database:
     def __init__(self, db_url: str = None):
@@ -96,10 +107,13 @@ class Database:
             
             history = []
             for query in queries:
+                # Ensure timestamp is timezone-aware
+                query_timestamp = ensure_timezone_aware(query.timestamp)
+                
                 query_data = {
                     "id": query.id,
                     "query_text": query.query_text,
-                    "timestamp": query.timestamp.isoformat(),
+                    "timestamp": query_timestamp.isoformat(),
                     "tasks": []
                 }
                 
@@ -112,9 +126,12 @@ class Database:
                     }
                     
                     if task.result:
+                        # Ensure result timestamp is timezone-aware
+                        result_timestamp = ensure_timezone_aware(task.result.timestamp)
+                        
                         task_data["result"] = {
                             "response": task.result.response,
-                            "timestamp": task.result.timestamp.isoformat()
+                            "timestamp": result_timestamp.isoformat()
                         }
                     
                     query_data["tasks"].append(task_data)
@@ -122,6 +139,37 @@ class Database:
                 history.append(query_data)
             
             return history
+        finally:
+            session.close()
+    
+    def delete_query(self, query_id: int):
+        """Delete a query and all related tasks and results (cascade delete)"""
+        session = self.get_session()
+        try:
+            # Get the query
+            query = session.query(Query).filter(Query.id == query_id).first()
+            
+            if not query:
+                raise ValueError(f"Query with ID {query_id} not found")
+            
+            # Delete related task results first
+            for task in query.tasks:
+                if task.result:
+                    session.delete(task.result)
+            
+            # Delete related tasks
+            for task in query.tasks:
+                session.delete(task)
+            
+            # Delete the query
+            session.delete(query)
+            session.commit()
+            
+            logger.info(f"Query {query_id} and related data deleted successfully")
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Failed to delete query {query_id}: {str(e)}")
+            raise
         finally:
             session.close()
 
