@@ -82,7 +82,13 @@ export default function EventTimeline() {
                   </span>
                 </div>
                 <div className="text-xs text-slate-400">
-                  {new Date(event.timestamp).toLocaleTimeString()}
+                  {new Date(event.timestamp).toLocaleString('en-IN', {
+                    timeZone: 'Asia/Kolkata',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true
+                  })}
                 </div>
                 {event.data.task && (
                   <div className="text-sm text-slate-300 mt-1 truncate">

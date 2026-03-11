@@ -79,3 +79,20 @@ async def get_history(limit: int = 10):
     except Exception as e:
         logger.error(f"Failed to get history: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/history/{query_id}")
+async def delete_history(query_id: int):
+    """Delete a query and all related tasks and results"""
+    try:
+        logger.info(f"Deleting query ID: {query_id}")
+        memory_manager.delete_query(query_id)
+        return {
+            "success": True,
+            "message": f"Query {query_id} deleted successfully"
+        }
+    except ValueError as e:
+        logger.warning(f"Query not found: {str(e)}")
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"Failed to delete query: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))

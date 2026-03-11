@@ -2,15 +2,23 @@ from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
+import pytz
 
 Base = declarative_base()
+
+# Asia/Kolkata timezone
+IST = pytz.timezone("Asia/Kolkata")
+
+def get_ist_now():
+    """Get current time in IST timezone"""
+    return datetime.now(IST)
 
 class Query(Base):
     __tablename__ = 'queries'
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     query_text = Column(Text, nullable=False)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime(timezone=True), default=get_ist_now)
     
     tasks = relationship("Task", back_populates="query", cascade="all, delete-orphan")
 
@@ -31,6 +39,6 @@ class TaskResult(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     task_id = Column(Integer, ForeignKey('tasks.id'), nullable=False)
     response = Column(Text, nullable=False)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime(timezone=True), default=get_ist_now)
     
     task = relationship("Task", back_populates="result")
